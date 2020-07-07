@@ -15,6 +15,10 @@ public class Helloworld : MonoBehaviour {
 
     // check and load patchs
     void Start () {
+        string path = @"D:\newPub\InjectDemo\InjectDemo\Assembly-CSharp.patch.bytes";
+        uint crc = Util.ComputeCRC32(path);
+        UnityEngine.Debug.LogError("crc:"+crc);
+
         VirtualMachine.Info = (s) => UnityEngine.Debug.Log(s);
         //try to load patch for Assembly-CSharp.dll
         var patch = Resources.Load<TextAsset>("Assembly-CSharp.patch");
@@ -38,7 +42,7 @@ public class Helloworld : MonoBehaviour {
         test();
     }
 
-    [IFix.Patch]
+    //[IFix.Patch]
     void test()
     {
         var calc = new IFix.Test.Calculator();

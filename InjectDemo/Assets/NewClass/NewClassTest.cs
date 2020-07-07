@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using IFix.Core;
@@ -108,7 +108,7 @@ public class NewClassTest : MonoBehaviour
         Init();
     }
 
-    [IFix.Patch]
+    //[IFix.Patch]
     private void Init()
     {
         subsystems.Add(new SubSystem1());

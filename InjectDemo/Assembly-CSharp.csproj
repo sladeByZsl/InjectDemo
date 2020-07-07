@@ -60,10 +60,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\CRC32.cs" />
     <Compile Include="Assets\Helloworld\Calc.cs" />
     <Compile Include="Assets\Helloworld\Helloworld.cs" />
     <Compile Include="Assets\NewClass\NewClassTest.cs" />
     <Compile Include="Assets\NewClass\VMBehaviourScript.cs" />
+    <Compile Include="Assets\Util.cs" />
     <Reference Include="Unity.TextMeshPro.Editor">
       <HintPath>D:/newPub/InjectDemo/InjectDemo/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>
@@ -280,6 +282,9 @@
     <Reference Include="UnityEngine.SpatialTracking">
       <HintPath>E:/unity2018-4-14/Unity/Editor/Data/UnityExtensions/Unity/UnitySpatialTracking/RuntimeEditor/UnityEngine.SpatialTracking.dll</HintPath>
     </Reference>
+    <Reference Include="IFix.Core">
+      <HintPath>D:/newPub/InjectDemo/InjectDemo/Assets/Plugins/IFix.Core.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.Analytics.Editor">
       <HintPath>D:/newPub/InjectDemo/InjectDemo/Library/PackageCache/com.unity.analytics@3.2.2/Unity.Analytics.Editor.dll</HintPath>
     </Reference>
@@ -288,9 +293,6 @@
     </Reference>
     <Reference Include="Unity.Analytics.Tracker">
       <HintPath>D:/newPub/InjectDemo/InjectDemo/Library/PackageCache/com.unity.analytics@3.2.2/Unity.Analytics.Tracker.dll</HintPath>
-    </Reference>
-    <Reference Include="IFix.Core">
-      <HintPath>D:/newPub/InjectDemo/InjectDemo/Assets/Plugins/IFix.Core.dll</HintPath>
     </Reference>
     <Reference Include="netstandard">
       <HintPath>E:/unity2018-4-14/Unity/Editor/Data/NetStandard/ref/2.0.0/netstandard.dll</HintPath>

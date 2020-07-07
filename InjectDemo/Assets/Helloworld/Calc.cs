@@ -11,12 +11,13 @@ namespace IFix.Test
     public class Calculator
     {
         //修改成正确的逻辑后，打开如下注释，生成的补丁将修正该函数
-        //[Patch]
+        [Patch]
         public int Add(int a, int b)
         {
-            return a + b;
+            return a * b;
         }
 
+        //[Patch]
         public int Sub(int a, int b)
         {
             return a - b;

@@ -20,7 +20,7 @@ public class AnotherClass
         this.pass = init;
     }
 
-    [IFix.Patch]
+    //[IFix.Patch]
     public int Call(Func<int, int> func)
     {
         int sum = 0;
