@@ -191,6 +191,9 @@ public class NewClassTest : MonoBehaviour
         {
             SetValEvent(2);
         }
+        StartCoroutine(PatchEnumerator());
+
+        InnerGenericMethod(2);
     }
 
 
