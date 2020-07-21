@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using IFix.Core;
 using System.IO;
+using System.Threading;
+using UpLoad;
 
 //1、执行菜单“InjectFix/Fix”生成补丁；
 //2、注释“NewBehaviourScript”，“SubSystem2”两个类，以及NewClassTest的Init函数里头new SubSystem2的那行语句；
@@ -49,47 +51,47 @@ public class SubSystem1 : ISubSystem
 }
 
 //[IFix.Interpret]
-public class NewBehaviourScript : IMonoBehaviour
-{
-    private int tick = 0;
+//public class NewBehaviourScript : IMonoBehaviour
+//{
+//    private int tick = 0;
 
-    public void Start()
-    {
-        Debug.Log("NewBehaviourScript.Start");
-    }
+//    public void Start()
+//    {
+//        Debug.Log("NewBehaviourScript.Start");
+//    }
 
-    public void Update()
-    {
-        if (tick++ % 60 == 0)
-        {
-            Debug.Log("NewBehaviourScript.Update");
-        }
-    }
-}
+//    public void Update()
+//    {
+//        if (tick++ % 60 == 0)
+//        {
+//            Debug.Log("NewBehaviourScript.Update");
+//        }
+//    }
+//}
 
 //[IFix.Interpret]
-public class SubSystem2 : ISubSystem
-{
-    public bool running { get { return true; } }
+//public class SubSystem2 : ISubSystem
+//{
+//    public bool running { get { return true; } }
 
-    public void Start()
-    {
-        Debug.Log("SubSystem2.Start, create GameObject and attach a NewBehaviourScript");
-        var go = new GameObject("hehe");
-        var behaviour = go.AddComponent(typeof(VMBehaviourScript)) as VMBehaviourScript;
-        behaviour.VMMonoBehaviour = new NewBehaviourScript();
-    }
+//    public void Start()
+//    {
+//        Debug.Log("SubSystem2.Start, create GameObject and attach a NewBehaviourScript");
+//        var go = new GameObject("hehe");
+//        var behaviour = go.AddComponent(typeof(VMBehaviourScript)) as VMBehaviourScript;
+//        behaviour.VMMonoBehaviour = new NewBehaviourScript();
+//    }
 
-    public void Stop()
-    {
-        Debug.Log("SubSystem2.Stop");
-    }
+//    public void Stop()
+//    {
+//        Debug.Log("SubSystem2.Stop");
+//    }
 
-    public void Destroy()
-    {
-        Debug.Log("SubSystem2.Destroy");
-    }
-}
+//    public void Destroy()
+//    {
+//        Debug.Log("SubSystem2.Destroy");
+//    }
+//}
 
 public class NewClassTest : MonoBehaviour
 {
@@ -97,22 +99,33 @@ public class NewClassTest : MonoBehaviour
 
     void Awake()
     {
-        var patch = Resources.Load<TextAsset>("Assembly-CSharp.patch");
-        if (patch != null)
+        MyStart();
+       
+        string fileName = Application.persistentDataPath + "/"+Config.fileName;
+      
+        //var patch = Resources.Load<TextAsset>("Assembly-CSharp.patch");
+        if (File.Exists(fileName))
         {
             Debug.Log("loading Assembly-CSharp.patch ...");
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            PatchManager.Load(new MemoryStream(patch.bytes));
+            PatchManager.Load(new FileStream(fileName,FileMode.Open));
             Debug.Log("patch Assembly-CSharp.patch, using " + sw.ElapsedMilliseconds + " ms");
         }
         Init();
     }
 
-    //[IFix.Patch]
+    void MyStart()
+    {
+        Debug.LogError("path:"+Application.persistentDataPath);
+        UpLoadFiles.Download("/"+ Config.fileName, Application.persistentDataPath + "/", Config.fileName);
+    }
+
+
+    [IFix.Patch]
     private void Init()
     {
         subsystems.Add(new SubSystem1());
-        subsystems.Add(new SubSystem2());
+        //subsystems.Add(new SubSystem2());
     }
 
 
