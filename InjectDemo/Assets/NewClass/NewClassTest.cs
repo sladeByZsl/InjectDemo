@@ -5,6 +5,7 @@ using IFix.Core;
 using System.IO;
 using System.Threading;
 using UpLoad;
+using System.Collections;
 
 //1、执行菜单“InjectFix/Fix”生成补丁；
 //2、注释“NewBehaviourScript”，“SubSystem2”两个类，以及NewClassTest的Init函数里头new SubSystem2的那行语句；
@@ -118,12 +119,27 @@ public class SubSystem2 : ISubSystem
 public class NewClassTest : MonoBehaviour
 {
     List<ISubSystem> subsystems = new List<ISubSystem>();
-  
+    public string testFieldName = "testFieldName";
+
+    private string testProperty= "testProperty";
+    public string TestProperty
+    {
+        get { return testProperty; }
+        set
+        {
+            testProperty = value;
+        }
+    }
+
+    public delegate void SetVal(int x);
+    public event SetVal SetValEvent;
+
+    Position position;
 
     void Awake()
     {
-        MyStart();
-       
+        UpLoadFiles.Download("/" + Config.fileName, Application.persistentDataPath + "/", Config.fileName);
+
         string fileName = Application.persistentDataPath + "/"+Config.fileName;
       
         //var patch = Resources.Load<TextAsset>("Assembly-CSharp.patch");
@@ -137,24 +153,6 @@ public class NewClassTest : MonoBehaviour
         Init();
     }
 
-    void MyStart()
-    {
-        Debug.LogError("path:"+Application.persistentDataPath);
-        UpLoadFiles.Download("/"+ Config.fileName, Application.persistentDataPath + "/", Config.fileName);
-    }
-
-
-    [IFix.Patch]
-    private void Init()
-    {
-        subsystems.Add(new SubSystem1());
-        //subsystems.Add(new SubSystem2());
-
-        //Config.tmp1 = "tmp2";
-        //NewClass newClass = new NewClass(Config.tmp1);
-    }
-
-
     void Start()
     {
         foreach (var subSystem in subsystems)
@@ -165,10 +163,60 @@ public class NewClassTest : MonoBehaviour
 
     void OnDestroy()
     {
+        SetValEvent -= setEventTest;
         foreach (var subSystem in subsystems)
         {
             subSystem.Destroy();
         }
+    }
+
+    private void setEventTest(int x)
+    {
+        Debug.Log("setEventTest:"+x);
+    }
+
+    //[IFix.Patch]
+    private void Init()
+    {
+        Debug.Log("Init");
+        subsystems.Add(new SubSystem1());
+        //subsystems.Add(new SubSystem2());
+
+        //Config.tmp1 = "tmp2";
+        //NewClass newClass = new NewClass(Config.tmp1);
+
+        SetValEvent += setEventTest;
+        position = new Position(2,3);
+        if(SetValEvent!=null)
+        {
+            SetValEvent(2);
+        }
+    }
+
+
+    public IEnumerator PatchEnumerator()
+    {
+        yield return new WaitForSeconds(1);
+        UnityEngine.Debug.Log("Wait 1 Second");
+    }
+
+    public void InnerGenericMethod<T>(T t)
+    {
+        UnityEngine.Debug.Log("InnerGenericMethod: " + t);
+    }
+
+
+}
+
+struct Position
+{
+    int x;
+    int y;
+
+    public Position(int mx,int my)
+    {
+        x = mx;
+        y = my;
     }
 }
 
