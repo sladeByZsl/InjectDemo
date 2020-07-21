@@ -9,15 +9,18 @@ using UnityEngine;
 using IFix.Core;
 using System.IO;
 using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 // 跑不同仔细看文档Doc/example.md
 public class Helloworld : MonoBehaviour {
 
     // check and load patchs
     void Start () {
-        string path = @"D:\newPub\InjectDemo\InjectDemo\Assembly-CSharp.patch.bytes";
-        uint crc = Util.ComputeCRC32(path);
-        UnityEngine.Debug.LogError("crc:"+crc);
+        //string path = Application.persistentDataPath + "/Assembly-CSharp.patch.bytes";
+        //Debug.LogError("path:"+ path);
+
+        //uint crc = Util.ComputeCRC32(path);
+        //UnityEngine.Debug.LogError("crc:"+crc);
 
         VirtualMachine.Info = (s) => UnityEngine.Debug.Log(s);
         //try to load patch for Assembly-CSharp.dll
