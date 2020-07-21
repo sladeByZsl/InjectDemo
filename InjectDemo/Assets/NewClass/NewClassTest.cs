@@ -50,52 +50,75 @@ public class SubSystem1 : ISubSystem
     }
 }
 
-//[IFix.Interpret]
-//public class NewBehaviourScript : IMonoBehaviour
-//{
-//    private int tick = 0;
+/*
+//新增类
+[IFix.Interpret]
+public class NewClass
+{
+    public Action<object> act;
 
-//    public void Start()
-//    {
-//        Debug.Log("NewBehaviourScript.Start");
-//    }
+    public string testField = "TestField";
 
-//    public void Update()
-//    {
-//        if (tick++ % 60 == 0)
-//        {
-//            Debug.Log("NewBehaviourScript.Update");
-//        }
-//    }
-//}
+    public NewClass(string cons)
+    {
+        UnityEngine.Debug.Log(cons);
+    }
 
-//[IFix.Interpret]
-//public class SubSystem2 : ISubSystem
-//{
-//    public bool running { get { return true; } }
+    public void Print()
+    {
+        Debug.LogError("new class print");
+    }
+}
 
-//    public void Start()
-//    {
-//        Debug.Log("SubSystem2.Start, create GameObject and attach a NewBehaviourScript");
-//        var go = new GameObject("hehe");
-//        var behaviour = go.AddComponent(typeof(VMBehaviourScript)) as VMBehaviourScript;
-//        behaviour.VMMonoBehaviour = new NewBehaviourScript();
-//    }
+[IFix.Interpret]
+public class NewBehaviourScript : IMonoBehaviour
+{
+    private int tick = 0;
 
-//    public void Stop()
-//    {
-//        Debug.Log("SubSystem2.Stop");
-//    }
+    public void Start()
+    {
+        Debug.Log("NewBehaviourScript.Start");
+    }
 
-//    public void Destroy()
-//    {
-//        Debug.Log("SubSystem2.Destroy");
-//    }
-//}
+    public void Update()
+    {
+        if (tick++ % 60 == 0)
+        {
+            Debug.Log("NewBehaviourScript.Update");
+        }
+    }
+}
+
+[IFix.Interpret]
+public class SubSystem2 : ISubSystem
+{
+    public bool running { get { return true; } }
+
+    public void Start()
+    {
+        Debug.Log("SubSystem2.Start, create GameObject and attach a NewBehaviourScript");
+        var go = new GameObject("hehe");
+        var behaviour = go.AddComponent(typeof(VMBehaviourScript)) as VMBehaviourScript;
+        behaviour.VMMonoBehaviour = new NewBehaviourScript();
+    }
+
+    public void Stop()
+    {
+        Debug.Log("SubSystem2.Stop");
+    }
+
+    public void Destroy()
+    {
+        Debug.Log("SubSystem2.Destroy");
+    }
+}
+*/
+
 
 public class NewClassTest : MonoBehaviour
 {
     List<ISubSystem> subsystems = new List<ISubSystem>();
+  
 
     void Awake()
     {
@@ -126,6 +149,9 @@ public class NewClassTest : MonoBehaviour
     {
         subsystems.Add(new SubSystem1());
         //subsystems.Add(new SubSystem2());
+
+        //Config.tmp1 = "tmp2";
+        //NewClass newClass = new NewClass(Config.tmp1);
     }
 
 

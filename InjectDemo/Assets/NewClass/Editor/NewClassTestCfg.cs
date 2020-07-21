@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using IFix;
@@ -14,7 +14,8 @@ public class NewClassTestCfg {
         {
             return new List<Type>()
             {
-                typeof(NewClassTest)
+                typeof(NewClassTest),
+                typeof(Config)
             };
         }
     }
