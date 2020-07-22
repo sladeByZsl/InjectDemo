@@ -66,6 +66,7 @@
     <Compile Include="Assets\Helloworld\Helloworld.cs" />
     <Compile Include="Assets\NewClass\NewClassTest.cs" />
     <Compile Include="Assets\NewClass\VMBehaviourScript.cs" />
+    <Compile Include="Assets\TestAll.cs" />
     <Compile Include="Assets\Tools\FTP.cs" />
     <Compile Include="Assets\Util.cs" />
     <Reference Include="Unity.TextMeshPro.Editor">

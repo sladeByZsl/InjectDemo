@@ -51,7 +51,7 @@ public class SubSystem1 : ISubSystem
     }
 }
 
-/*
+
 //新增类
 [IFix.Interpret]
 public class NewClass
@@ -113,7 +113,7 @@ public class SubSystem2 : ISubSystem
         Debug.Log("SubSystem2.Destroy");
     }
 }
-*/
+
 
 
 public class NewClassTest : MonoBehaviour
@@ -153,6 +153,7 @@ public class NewClassTest : MonoBehaviour
         Init();
     }
 
+    [IFix.Patch]
     void Start()
     {
         foreach (var subSystem in subsystems)
@@ -175,15 +176,15 @@ public class NewClassTest : MonoBehaviour
         Debug.Log("setEventTest:"+x);
     }
 
-    //[IFix.Patch]
+    [IFix.Patch]
     private void Init()
     {
         Debug.Log("Init");
         subsystems.Add(new SubSystem1());
-        //subsystems.Add(new SubSystem2());
+        subsystems.Add(new SubSystem2());
 
-        //Config.tmp1 = "tmp2";
-        //NewClass newClass = new NewClass(Config.tmp1);
+        Config.tmp1 = "tmp2";
+        NewClass newClass = new NewClass(Config.tmp1);
 
         SetValEvent += setEventTest;
         position = new Position(2,3);
@@ -196,11 +197,13 @@ public class NewClassTest : MonoBehaviour
         InnerGenericMethod(2);
     }
 
-
+    [IFix.Patch]
     public IEnumerator PatchEnumerator()
     {
         yield return new WaitForSeconds(1);
         UnityEngine.Debug.Log("Wait 1 Second");
+        yield return null;
+        UnityEngine.Debug.Log("Wait 2 frame");
     }
 
     public void InnerGenericMethod<T>(T t)

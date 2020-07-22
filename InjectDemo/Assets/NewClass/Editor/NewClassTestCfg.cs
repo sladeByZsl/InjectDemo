@@ -15,7 +15,9 @@ public class NewClassTestCfg {
             return new List<Type>()
             {
                 typeof(NewClassTest),
-                typeof(Config)
+                typeof(Config),
+                typeof(TestAll),
+                typeof(TestModify)
             };
         }
     }
