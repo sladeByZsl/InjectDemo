@@ -57,16 +57,13 @@ public class TestAll : MonoBehaviour
         }
         else
         {
-            Debug.LogError("download success");
+            Debug.Log("download success");
+            LoadPatch();
         }
     }
 
-
-
-
-    private void init()
+    private void LoadPatch()
     {
-        UpLoadFiles.Download("/" + Config.fileName, Application.persistentDataPath + "/", Config.fileName);
         string fileName = Application.persistentDataPath + "/" + Config.fileName;
         if (File.Exists(fileName))
         {
@@ -75,6 +72,13 @@ public class TestAll : MonoBehaviour
             PatchManager.Load(new FileStream(fileName, FileMode.Open));
             Debug.Log("patch Assembly-CSharp.patch, using " + sw.ElapsedMilliseconds + " ms");
         }
+    }
+
+
+    private void init()
+    {
+        UpLoadFiles.Download("/" + Config.fileName, Application.persistentDataPath + "/", Config.fileName);
+        LoadPatch();
     }
 
     //[IFix.Patch]
