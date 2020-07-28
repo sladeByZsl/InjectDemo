@@ -5,8 +5,8 @@ using IFix;
 using System;
 
 [Configure]
-public class NewClassTestCfg {
-
+public class TestAllCfg
+{
 	[IFix]
     static IEnumerable<Type> hotfix
     {
@@ -14,10 +14,13 @@ public class NewClassTestCfg {
         {
             return new List<Type>()
             {
-                typeof(NewClassTest),
                 typeof(Config),
                 typeof(TestAll),
-                typeof(TestModify)
+                typeof(TestModify),
+                typeof(Animal),
+                typeof(People),
+                typeof(IEnumerable),
+                typeof(IEnumerator)
             };
         }
     }
