@@ -16,13 +16,120 @@ public class TestAll : MonoBehaviour
     TestModify testModify;
 
     HttpDownLoad mDownLoader;
+    DownloadAsyncOperation m_DownloadOperation;
+
+    float m_StartTime;
 
     void Awake()
     {
         Debug.Log("init awake");
         //init();
-        init2();
+        init3();
+        //testAsyncOperation = new TestAsyncOperation();
+        //init4();
     }
+
+
+
+    private void init4()
+    {
+        this.StartCoroutine(tet());
+    }
+
+    TestAsyncOperation testAsyncOperation;
+    private IEnumerator tet()
+    {
+        Debug.Log("0");
+        yield return new DownloadAsyncOperation();
+        Debug.Log("1");
+    }
+
+    private void init3()
+    {
+        this.StartCoroutine(NewDownloadFiles());
+    }
+
+    private IEnumerator NewDownloadFiles()
+    {
+        m_StartTime = 0.0f;
+        DownloadInfo[] downloadInfos = LoadDownloadInfos();
+        m_DownloadOperation = DownloadAsyncOperation.Start<UnityWebRequestHandler>(downloadInfos, 4);
+        m_DownloadOperation.completed += OnDownloadCompleted;
+        yield return m_DownloadOperation;
+        Debug.LogError("here---------------------------");
+        yield return 0;
+    }
+
+    private void OnDownloadCompleted(DownloadAsyncOperation obj)
+    {
+        Debug.LogError("下载成功");
+        m_DownloadOperation.completed -= OnDownloadCompleted;
+        m_DownloadOperation.Cancel();
+        m_DownloadOperation = null;
+    }
+
+    private DownloadInfo[] LoadDownloadInfos()
+    {
+        List<DownloadInfo> tasks = new List<DownloadInfo>();
+        Debug.Log("file:"+Application.persistentDataPath + "/" + Config.fileName);
+        DownloadInfo ti = new DownloadInfo
+        {
+            name = Config.fileName,
+            url = "http://10.0.107.63/downloads/zsl/" + Config.fileName,
+            path = Application.persistentDataPath +"/"+ Config.fileName,
+        };
+        tasks.Add(ti);
+        return tasks.ToArray();
+    }
+
+    void Update()
+    {
+        if (m_DownloadOperation == null)
+            return;
+
+        long size = 0;
+        foreach (var task in m_DownloadOperation.downloadHandles)
+        {
+            size += task.info.currentSize;
+            if (task.state == DownloadState.downloading)
+            {
+                Log(task);
+            }
+        }
+        float time = Time.unscaledTime - m_StartTime;
+        Debug.Log(string.Format("下载进度: {0:f2}%,下载量: {1:f2}M,下载耗时: {2:f2} (秒),下载速度:{3:f2}K", m_DownloadOperation.Progress * 100, size / (1024 * 1024), time, size / time / 1024));
+    }
+
+
+    void Log(IDownloadHandler handler)
+    {
+        if (handler.progress < 1.0f)
+        {  
+            //Debug.Log("<color=red>"+",proces:"+handler.progress+","+ handler.info.name + " - " + handler.info.currentSize+",totalSize:"+handler.info.totalSize + "</color>");
+        }
+        else
+        {
+            //Debug.Log("<color=green>" + handler.info.name + " - " + handler.info.currentSize + "</color>");
+        }
+    }
+
+    void OnDestroy()
+    {
+        Debug.Log("init destroy");
+        this.StopCoroutine(NewDownloadFiles());
+        if (m_DownloadOperation != null)
+            m_DownloadOperation.Cancel();
+        
+    }
+
+
+
+
+
+
+
+
+
 
 
 
@@ -40,11 +147,8 @@ public class TestAll : MonoBehaviour
         mDownLoader.Init();
         string fileListPath = "http://10.0.107.63/downloads/zsl/"+Config.fileName;
 
-#if UNITY_EDITOR
-        string saveFilePath = "Assets/../Download/"+Config.fileName;
-#else
-        string saveFilePath =  Application.persistentDataPath + "/" + Config.fileName;
-#endif
+        string saveFilePath = Application.persistentDataPath + "/" + Config.fileName;
+
         mDownLoader.DownLoad(fileListPath, saveFilePath);
         while (!mDownLoader.isDone)
         {
@@ -62,6 +166,7 @@ public class TestAll : MonoBehaviour
         }
     }
 
+    //[IFix.Patch]
     private void LoadPatch()
     {
         string fileName = Application.persistentDataPath + "/" + Config.fileName;
@@ -72,13 +177,28 @@ public class TestAll : MonoBehaviour
             PatchManager.Load(new FileStream(fileName, FileMode.Open));
             Debug.Log("patch Assembly-CSharp.patch, using " + sw.ElapsedMilliseconds + " ms");
         }
+        StartTest();
+    }
+
+    //[IFix.Patch]
+    private void init()
+    {
+        //UpLoadFiles.Download("/" + Config.fileName, Application.persistentDataPath + "/", Config.fileName);
+        //LoadPatch();
     }
 
 
-    private void init()
+    [IFix.Patch]
+    public void Error0()
     {
-        UpLoadFiles.Download("/" + Config.fileName, Application.persistentDataPath + "/", Config.fileName);
-        LoadPatch();
+        var t0 = typeof(Nullable<>);
+        var t1 = typeof(List<>);
+        int i = 0;
+    }
+
+    private void Error0Test(int? a, List<int> b)
+    {
+
     }
 
     //[IFix.Patch]
@@ -106,27 +226,122 @@ public class TestAll : MonoBehaviour
     }
 
     //[IFix.Patch]
-    void Update()
-    {
-        if (isUpdate)
-        {
-            Debug.Log("init update");
-            //testAdd("haha");
-            //StartCoroutine(PatchEnumerator("abv"));
-            isUpdate = false;
-        }
-    }
+    //void Update()
+    //{
+    //    if (isUpdate)
+    //    {
+    //        Debug.Log("init update");
+    //        //testAdd("haha");
+    //        //StartCoroutine(PatchEnumerator("abv"));
+    //        isUpdate = false;
+    //    }
+    //}
 
-    void OnDestroy()
+    void StartTest()
     {
-        Debug.Log("init destroy");
+        Debug.Log("StartTest");
     }
 
     //[IFix.Interpret]
-    //public void testAdd(string abv)
+    //public void testAdd(string abc)
     //{
-    //    UnityEngine.Debug.Log("testAdd : " + abv);
+    //    UnityEngine.Debug.Log("testAdd : " + abc);
     //}
+
+
+    private SortedDictionary<string, List<string>> serverDic = new SortedDictionary<string, List<string>>();
+    private List<int> testList = new List<int>();
+    //[IFix.Patch]
+    // 协程中访问迭代器
+    private IEnumerator GetIps()
+    {
+        //通过迭代器访问无法Patch
+        {
+            var eList = testList.GetEnumerator();
+            var eDic = serverDic.GetEnumerator();
+            foreach (var e in serverDic.Keys)
+            {
+            }
+        }
+
+        /* 这种访问没有问题
+        {
+            for (int i = 0; i < testList.Count; ++i)
+            {
+                var a = testList[i];
+            }
+
+            var keys = new List<string>(serverDic.Keys);
+            var values = new List<List<string>>(serverDic.Values);
+            for (int i = 0; i < keys.Count; ++i)
+            {
+                serverDic[keys[i]] = values[i];
+            }
+
+            // 通过函数在协程外访问没有问题
+            loopAdapter(testList, (e) => { var ee = e; });
+            loopAdapter(serverDic, (e) => { return e; });
+        }*/
+
+        yield return null;
+    }
+
+    private void loopAdapter(List<int> list, Action<int> fun)
+    {
+        for ( var e = list.GetEnumerator(); e.MoveNext(); )
+        {
+            fun(e.Current);
+        }
+    }
+    private void loopAdapter(SortedDictionary<string, List<string>> dic, Func<List<string>, List<string>> fun)
+    {
+        for (var e = dic.GetEnumerator(); e.MoveNext();)
+        {
+            var newValue = fun(e.Current.Value);
+        }
+    }
+
+
+    //[IFix.Patch]
+    // 匿名函数中使用KeyValuePair无法Patch
+    private void Error3(KeyValuePair<int, int> areaItem)
+    {
+        // 匿名函数中使用KeyValuePair 无法Patch
+        {
+            Action fun = () =>
+            {
+                var kk = areaItem;
+            };
+        }
+
+        // 可以通过以下方法绕过
+        /*{
+            // 不适用匿名函数
+            Fun(areaItem);
+
+            // 将变量取出
+            {
+
+                var k = areaItem.Key;
+                var v = areaItem.Value;
+                
+                // 这种不可以
+                //var kv = areaItem;
+                Action fun = () =>
+                {
+                    var kk = k;
+                    var vv = v;
+
+                    // 这种不可以
+                    //var kkvv = kv;
+                };
+            }
+        }*/
+    }
+    private void Fun(KeyValuePair<int, int> areaItem)
+    {
+        var v = areaItem;
+    }
 
     //[IFix.Interpret]
     //public IEnumerator<int> PatchEnumerator(int i)
@@ -193,7 +408,7 @@ public static class AdditionalBridge
     {
         typeof(ISubSystem),
         typeof(IMonoBehaviour),
-        typeof(IEnumerator<int>),
+        //typeof(IEnumerator<int>),
     };
 }
 

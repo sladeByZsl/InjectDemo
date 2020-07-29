@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -9,15 +9,15 @@ namespace Yunchang.Download
 {
     public class FileDownloadHandler : DownloadHandlerScript
     {
-        FileStream m_Stream;
+        FileStream stream;
         bool m_IsCancel;
 
-        DownloadInfo m_DownloadInfo;
+        DownloadInfo info;
 
-        public FileDownloadHandler(DownloadInfo info)
-            :base(new byte[1024 * 1024])
+        public FileDownloadHandler(DownloadInfo _info)
+            : base(new byte[1024 * 1024])//开辟1M的内存
         {
-            m_DownloadInfo = info;
+            info = _info;
         }
 
         public bool OpenOrCreateFile()
@@ -25,11 +25,18 @@ namespace Yunchang.Download
             try
             {
                 m_IsCancel = false;
-                m_Stream = File.Open(m_DownloadInfo.path, FileMode.OpenOrCreate, FileAccess.Write);
-                m_Stream.Seek(m_DownloadInfo.currentSize, SeekOrigin.Begin);
+                stream = File.Open(info.path, FileMode.OpenOrCreate, FileAccess.Write);
+                info.currentSize = stream.Length;
+                if (stream.Length > 0)
+                {
+                    stream.Seek(stream.Length, SeekOrigin.Begin);
+                }
             }
             catch (Exception exception)
             {
+                Debug.LogError("download file fail:" + exception.ToString());
+                CloseStream();
+                m_IsCancel = true;
                 return false;
             }
             return true;
@@ -37,7 +44,7 @@ namespace Yunchang.Download
 
         protected override float GetProgress()
         {
-            return (float)((double)m_DownloadInfo.currentSize / (double)m_DownloadInfo.totalSize);
+            return (float)((double)info.currentSize / (double)info.totalSize);
         }
 
         protected override void ReceiveContentLength(int contentLength)
@@ -47,12 +54,12 @@ namespace Yunchang.Download
 
         protected override bool ReceiveData(byte[] data, int dataLength)
         {
-            if (data == null || dataLength == 0 || m_IsCancel || m_Stream == null)
+            if (data == null || dataLength == 0 || m_IsCancel || stream == null)
                 return false;
             try
             {
-                m_Stream.Write(data, 0, dataLength);
-                m_DownloadInfo.currentSize = m_Stream.Length;
+                stream.Write(data, 0, dataLength);
+                info.currentSize = stream.Length;
             }
             catch (Exception e)
             {
@@ -69,11 +76,11 @@ namespace Yunchang.Download
 
         public void CloseStream()
         {
-            if (m_Stream != null)
+            if (stream != null)
             {
-                m_Stream.Close();
-                m_Stream.Dispose();
-                m_Stream = null;
+                stream.Close();
+                stream.Dispose();
+                stream = null;
             }
         }
 
@@ -100,42 +107,66 @@ namespace Yunchang.Download
         public void Start()
         {
             state = DownloadState.downloading;
-
-            var dirname = Path.GetDirectoryName(info.path);
-            if (!Directory.Exists(dirname))
-                Directory.CreateDirectory(dirname);
-
-            if (info.currentSize == info.totalSize)
+            long fileSize = -1;
+            if (WebHelper.TryGetLength(info.url, out fileSize))//要提前获取totalSize
             {
-                state = DownloadState.done;
+                info.totalSize = fileSize;
             }
             else
             {
+                state = DownloadState.error;
+                Cancel();
+                Debug.LogError("task fail,getFileSize fail:" + info.ToString());
+            }
+        }
+
+        private void Download()
+        {
+            try
+            {
+                var dirname = Path.GetDirectoryName(info.path);
+                if (!Directory.Exists(dirname))
+                {
+                    Directory.CreateDirectory(dirname);
+                }
+
                 m_FileDownloadHandler = new FileDownloadHandler(info);
-                if (!m_FileDownloadHandler.OpenOrCreateFile())
+                if (m_FileDownloadHandler.OpenOrCreateFile())
+                {
+                    if (info.currentSize == info.totalSize)
+                    {
+                        state = DownloadState.done;
+                    }
+                    else
+                    {
+                        var request = UnityWebRequest.Get(info.url);
+                        request.timeout = 60;
+                        request.redirectLimit = 1;
+                        request.downloadHandler = m_FileDownloadHandler;
+                        //Debug.LogError("bytes=" + info.currentSize + "-" + info.totalSize);
+                        if (info.currentSize == 0)
+                            request.SetRequestHeader("Range", "bytes=0-");
+                        else
+                            request.SetRequestHeader("Range", "bytes=" + info.currentSize + "-" + info.totalSize);
+                        var operation = request.SendWebRequest();
+                        operation.completed += OnOperationCompleted;
+                    }
+                }
+                else
                 {
                     state = DownloadState.error;
                     m_FileDownloadHandler.CloseStream();
                 }
-                else
-                {
-                    var request = UnityWebRequest.Get(info.url);
-                    request.timeout = 60;
-                    request.redirectLimit = 1;
-                    request.downloadHandler = m_FileDownloadHandler;
-                    if (info.currentSize == 0)
-                        request.SetRequestHeader("Range", "bytes=0-");
-                    else
-                        request.SetRequestHeader("Range", "bytes=" + info.currentSize + "-" + info.totalSize);
-                    var operation = request.SendWebRequest();
-                    operation.completed += OnOperationCompleted;
-                }
+            }
+            catch (Exception ex)
+            {
+
             }
         }
 
         public void Cancel()
         {
-            if(m_FileDownloadHandler != null)
+            if (m_FileDownloadHandler != null)
             {
                 m_FileDownloadHandler.Cancel();
             }
@@ -146,10 +177,10 @@ namespace Yunchang.Download
             var operation = opt as UnityWebRequestAsyncOperation;
             var request = operation.webRequest;
 
-            if (request.isNetworkError || request.isHttpError
-                || info.currentSize < info.totalSize)
+            if (request.isNetworkError || request.isHttpError)
             {
                 state = DownloadState.error;
+                Debug.LogError("request fail:" + request.error);
             }
             else
             {

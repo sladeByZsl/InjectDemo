@@ -1,29 +1,33 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Yunchang.Download
 {
+    /// <summary>
+    /// ��������Ĺ����࣬�̳�CustomYieldInstruction��ͨ��Э�̵�keepWaiting������
+    /// </summary>
     public class DownloadAsyncOperation : CustomYieldInstruction
     {
-        private IDownloadHandler[] m_DownloadHandles;
-        private int m_ParallelCount;
-        private float m_Progress = 0;
-        private bool m_IsDone = false;
+        private int m_ParallelCount;//���е�����
         private event Action<DownloadAsyncOperation> m_Completed;
+        public float Progress { get; private set; }
+        public IDownloadHandler[] downloadHandles { get; private set; }
 
-        public float progress => m_Progress;
-        public override bool keepWaiting => isDone;
-        public IDownloadHandler[] downloadHandles => m_DownloadHandles;
+        /// <summary>
+        /// ʵ��CustomYieldInstruction�ӿڵķ�������ֵΪtrue��ʱ��Э�̻�һֱ�ȴ���false��ʱ�򣬻����
+        /// </summary>
+        public override bool keepWaiting => !IsDone;
 
-
+        /// <summary>
+        /// Э�̽���ʱ��ί��
+        /// </summary>
         public event Action<DownloadAsyncOperation> completed
         {
             add
             {
                 m_Completed += value;
-                if (isDone) m_Completed(this);
             }
             remove
             {
@@ -31,47 +35,53 @@ namespace Yunchang.Download
             }
         }
 
-        public bool isDone
+        public bool IsDone
         {
             get
             {
-                if (m_DownloadHandles == null)
-                    return true;
                 Update();
+
                 long current = 0, total = 0;
-                for (int i = 0; i < m_DownloadHandles.Length; i++)
+                bool mIsAllDownload = true;
+                if (downloadHandles == null)
+                    return true;
+                for (int i = 0; i < downloadHandles.Length; i++)
                 {
-                    current += m_DownloadHandles[i].info.currentSize;
-                    total += m_DownloadHandles[i].info.totalSize;
+                    current += downloadHandles[i].info.currentSize;
+                    total += downloadHandles[i].info.totalSize;
+                    if (downloadHandles[i].state == DownloadState.none || downloadHandles[i].state == DownloadState.downloading)//�����������δ��������������أ�˵����������δ���
+                    {
+                        mIsAllDownload = false;
+                    }
                 }
-                m_Progress = (float)((double)current / (double)total);
-                if (current == total && m_Completed != null)
+                Progress = (float)((double)current / (double)total);
+                if (mIsAllDownload && m_Completed != null)
                     m_Completed(this);
-                return current == total;
+                return mIsAllDownload;
             }
         }
 
         private void Update()
         {
-            if (m_DownloadHandles == null)
+            if (downloadHandles == null)
                 return;
             int count = 0;
-            for (int i = 0; i < m_DownloadHandles.Length; i++)
+            for (int i = 0; i < downloadHandles.Length; i++)
             {
-                if (m_DownloadHandles[i].state == DownloadState.downloading)
+                if (downloadHandles[i].state == DownloadState.downloading)
                     count++;
-                else if (m_DownloadHandles[i].state == DownloadState.error)
-                    m_DownloadHandles[i].state = DownloadState.none;
+                else if (downloadHandles[i].state == DownloadState.error)
+                    downloadHandles[i].state = DownloadState.none;
             }
 
             if (count >= m_ParallelCount)
                 return;
 
-            for (int i = 0; i < m_DownloadHandles.Length; i++)
+            for (int i = 0; i < downloadHandles.Length; i++)
             {
-                if (m_DownloadHandles[i].state == DownloadState.none)
+                if (downloadHandles[i].state == DownloadState.none)
                 {
-                    m_DownloadHandles[i].Start();
+                    downloadHandles[i].Start();
                     break;
                 }
             }
@@ -79,23 +89,24 @@ namespace Yunchang.Download
 
         public void Cancel()
         {
-            for (int i = 0; i < m_DownloadHandles.Length; i++)
+            for (int i = 0; i < downloadHandles.Length; i++)
             {
-                if (m_DownloadHandles[i].state == DownloadState.downloading)
-                    m_DownloadHandles[i].Cancel();
+                if (downloadHandles[i].state == DownloadState.downloading)
+                    downloadHandles[i].Cancel();
             }
-            m_DownloadHandles = null;
+            downloadHandles = null;
         }
 
-        public static DownloadAsyncOperation Start<T>(DownloadInfo[] files,int parallelCount) where T : IDownloadHandler
+        public static DownloadAsyncOperation Start<T>(DownloadInfo[] files, int parallelCount) where T : IDownloadHandler
         {
             var opt = new DownloadAsyncOperation();
             opt.m_ParallelCount = parallelCount;
-            opt.m_DownloadHandles = new IDownloadHandler[files.Length];
+            opt.downloadHandles = new IDownloadHandler[files.Length];
             for (int i = 0; i < files.Length; i++)
             {
-                opt.m_DownloadHandles[i] = (IDownloadHandler)Activator.CreateInstance<T>();
-                opt.m_DownloadHandles[i].info = files[i];
+                opt.downloadHandles[i] = (IDownloadHandler)Activator.CreateInstance<T>();
+                opt.downloadHandles[i].info = files[i];
+                opt.downloadHandles[i].state = DownloadState.none;
             }
             return opt;
         }
