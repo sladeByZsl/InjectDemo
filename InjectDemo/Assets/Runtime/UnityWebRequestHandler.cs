@@ -14,6 +14,10 @@ namespace Yunchang.Download
 
         DownloadInfo info;
 
+        /// <summary>
+        ///  初始化下载句柄，定义每次下载的数据上限为1M
+        /// </summary>
+        /// <param name="_info"></param>
         public FileDownloadHandler(DownloadInfo _info)
             : base(new byte[1024 * 1024])//开辟1M的内存
         {
@@ -24,6 +28,11 @@ namespace Yunchang.Download
         {
             try
             {
+                var dirname = Path.GetDirectoryName(info.path);
+                if (!Directory.Exists(dirname))
+                {
+                    Directory.CreateDirectory(dirname);
+                }
                 m_IsCancel = false;
                 stream = File.Open(info.path, FileMode.OpenOrCreate, FileAccess.Write);
                 info.currentSize = stream.Length;
@@ -35,8 +44,7 @@ namespace Yunchang.Download
             catch (Exception exception)
             {
                 Debug.LogError("download file fail:" + exception.ToString());
-                CloseStream();
-                m_IsCancel = true;
+                Cancel();
                 return false;
             }
             return true;
@@ -47,46 +55,60 @@ namespace Yunchang.Download
             return (float)((double)info.currentSize / (double)info.totalSize);
         }
 
+        /// <summary>
+        /// 请求下载时的第一个回调函数，会返回需要接收的文件总长度
+        /// </summary>
+        /// <param name="contentLength"></param>
         protected override void ReceiveContentLength(int contentLength)
         {
             base.ReceiveContentLength(contentLength);
         }
 
+        /// <summary>
+        /// 从网络获取数据时候的回调，每帧调用一次
+        /// </summary>
+        /// <param name="data">接收到的数据字节流，总长度为构造函数定义的1M，并非所有的数据都是新的</param>
+        /// <param name="dataLength">接收到的数据长度，表示data字节流数组中有多少数据是新接收到的，即0-dataLength之间的数据是刚接收到的</param>
+        /// <returns>返回true为继续下载，返回false为中断下载</returns>
         protected override bool ReceiveData(byte[] data, int dataLength)
         {
             if (data == null || dataLength == 0 || m_IsCancel || stream == null)
                 return false;
             try
             {
-                stream.Write(data, 0, dataLength);
-                info.currentSize = stream.Length;
+                if(stream.CanWrite)
+                {
+                    stream.Write(data, 0, dataLength);
+                    info.currentSize = stream.Length;
+                }
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
+                Cancel();
+                Debug.LogError("task fail,ReceiveData fail:" + exception.ToString());
                 return false;
             }
             return true;
         }
 
+        /// <summary>
+        /// 当接受数据完成时的回调
+        /// </summary>
         protected override void CompleteContent()
         {
             base.CompleteContent();
-            CloseStream();
+            Cancel();
         }
 
-        public void CloseStream()
+        public void Cancel()
         {
+            m_IsCancel = true;
             if (stream != null)
             {
                 stream.Close();
                 stream.Dispose();
                 stream = null;
             }
-        }
-
-        public void Cancel()
-        {
-            m_IsCancel = true;
         }
     }
 
@@ -111,6 +133,7 @@ namespace Yunchang.Download
             if (WebHelper.TryGetLength(info.url, out fileSize))//要提前获取totalSize
             {
                 info.totalSize = fileSize;
+                Download();
             }
             else
             {
@@ -124,12 +147,6 @@ namespace Yunchang.Download
         {
             try
             {
-                var dirname = Path.GetDirectoryName(info.path);
-                if (!Directory.Exists(dirname))
-                {
-                    Directory.CreateDirectory(dirname);
-                }
-
                 m_FileDownloadHandler = new FileDownloadHandler(info);
                 if (m_FileDownloadHandler.OpenOrCreateFile())
                 {
@@ -155,12 +172,13 @@ namespace Yunchang.Download
                 else
                 {
                     state = DownloadState.error;
-                    m_FileDownloadHandler.CloseStream();
+                    Cancel();
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-
+                Cancel();
+                Debug.LogError("download file fail:" + exception.ToString());
             }
         }
 
@@ -169,6 +187,7 @@ namespace Yunchang.Download
             if (m_FileDownloadHandler != null)
             {
                 m_FileDownloadHandler.Cancel();
+                m_FileDownloadHandler = null;
             }
         }
 
@@ -186,9 +205,11 @@ namespace Yunchang.Download
             {
                 state = DownloadState.done;
             }
-            m_FileDownloadHandler.CloseStream();
-            m_FileDownloadHandler = null;
-            request.Dispose();
+            Cancel();
+            if (request != null)
+            {
+                request.Dispose();
+            }
         }
 
         public float progress => (float)((double)info.currentSize / (double)info.totalSize);

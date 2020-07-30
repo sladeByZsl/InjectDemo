@@ -74,7 +74,6 @@ public class TestAll : MonoBehaviour
         Debug.Log("file:"+Application.persistentDataPath + "/" + Config.fileName);
         DownloadInfo ti = new DownloadInfo
         {
-            name = Config.fileName,
             url = "http://10.0.107.63/downloads/zsl/" + Config.fileName,
             path = Application.persistentDataPath +"/"+ Config.fileName,
         };
