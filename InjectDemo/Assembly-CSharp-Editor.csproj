@@ -65,6 +65,7 @@
     <Compile Include="Assets\IFix\Editor\ILFixEditor.cs" />
     <Compile Include="Assets\IFix\Editor\ILFixTools.cs" />
     <Compile Include="Assets\NewClass\Editor\NewClassTestCfg.cs" />
+    <Compile Include="Assets\Unity-Logs-Viewer\Reporter\Editor\ReporterEditor.cs" />
     <Reference Include="Unity.TextMeshPro.Editor">
       <HintPath>D:/newPub/InjectDemo/InjectDemo/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>

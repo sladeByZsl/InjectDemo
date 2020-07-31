@@ -237,9 +237,10 @@ public class TestAll : MonoBehaviour
     //    }
     //}
 
+    [IFix.Patch]
     void StartTest()
     {
-        Debug.Log("StartTest");
+        Debug.Log("StartTest222222222");
     }
 
     //[IFix.Interpret]
