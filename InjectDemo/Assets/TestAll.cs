@@ -23,8 +23,8 @@ public class TestAll : MonoBehaviour
     void Awake()
     {
         Debug.Log("init awake");
-        //init();
-        init3();
+        init2();
+        //init3();
         //testAsyncOperation = new TestAsyncOperation();
         //init4();
     }
@@ -147,6 +147,7 @@ public class TestAll : MonoBehaviour
         string fileListPath = "http://10.0.107.63/downloads/zsl/"+Config.fileName;
 
         string saveFilePath = Application.persistentDataPath + "/" + Config.fileName;
+        Debug.Log(saveFilePath);
 
         mDownLoader.DownLoad(fileListPath, saveFilePath);
         while (!mDownLoader.isDone)
@@ -183,11 +184,11 @@ public class TestAll : MonoBehaviour
     private void init()
     {
         //UpLoadFiles.Download("/" + Config.fileName, Application.persistentDataPath + "/", Config.fileName);
-        //LoadPatch();
+        LoadPatch();
     }
 
 
-    [IFix.Patch]
+    //[IFix.Patch]
     public void Error0()
     {
         var t0 = typeof(Nullable<>);

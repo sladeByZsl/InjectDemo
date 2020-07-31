@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class Config
 {
-    public static string fileName = "en_windows_10_n_multiple_editions_x64_dvd_6846434.iso";
+    public static string fileName = "Assembly-CSharp.patch.bytes";
 
     public static string tmp1 = "tmp1";
 
